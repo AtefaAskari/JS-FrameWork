@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f9fafb;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 760px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            padding: 24px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        
+        .title-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .graduation-icon {
+            width: 32px;
+            height: 32px;
+            color: #7c3aed;
+        }
+        
+        h1 {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #1f2937;
+        }
+        
+        .add-button {
+            background: #7c3aed;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 9999px;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .add-button:hover {
+            background: #6d28d9;
+        }
+        
+        .add-button:focus {
+            outline: 2px solid #7c3aed;
+            outline-offset: 2px;
+        }
+        
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 400px;
+            padding: 24px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1f2937;
+        }
+        
+        .close-button {
+            background: none;
+            border: none;
+            color: #6b7280;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+        }
+        
+        .close-button:hover {
+            color: #374151;
+            background: #f3f4f6;
+        }
+        
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 16px;
+        }
+        
+        label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 4px;
+        }
+        
+        input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: #7c3aed;
+            box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.2);
+        }
+        
+        input.error {
+            border-color: #dc2626;
+        }
+        
+        .error-message {
+            color: #dc2626;
+            font-size: 14px;
+            margin-top: 4px;
+        }
+        
+        .form-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+        
+        .btn {
+            flex: 1;
+            padding: 10px 16px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .btn-cancel {
+            background: #f3f4f6;
+            color: #374151;
+        }
+        
+        .btn-cancel:hover {
+            background: #e5e7eb;
+        }
+        
+        .btn-submit {
+            background: #7c3aed;
+            color: white;
+        }
+        
+        .btn-submit:hover:not(:disabled) {
+            background: #6d28d9;
+        }
+        
+        .btn-submit:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        /* Student List Styles */
+        .student-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #6b7280;
+        }
+        
+        .empty-icon {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 16px;
+            color: #d1d5db;
+        }
+        
+        /* Student Card Styles */
+        .student-card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            border: 1px solid #f3f4f6;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            transition: box-shadow 0.2s;
+            display: flex;
+            justify-content: between;
+            align-items: center;
+        }
+        
+        .student-card:hover {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .student-info {
+            flex: 1;
+        }
+        
+        .student-name {
+            font-weight: bold;
+            font-size: 18px;
+            color: #1f2937;
+            margin-bottom: 4px;
+        }
+        
+        .student-age {
+            color: #6b7280;
+        }
+        
+        .delete-button {
+            background: none;
+            border: none;
+            color: #dc2626;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 6px;
+            transition: background-color 0.2s;
+        }
+        
+        .delete-button:hover {
+            background: #fef2f2;
+        }
+        
+        .delete-button:focus {
+            outline: 2px solid #dc2626;
+            outline-offset: 2px;
+        }
+        
+        /* Animations */
+        .fade-enter-active, .fade-leave-active {
+            transition: opacity 0.3s;
+        }
+        
+        .fade-enter-from, .fade-leave-to {
+            opacity: 0;
+        }
+        
+        .slide-enter-active {
+            transition: all 0.3s ease;
+        }
+        
+        .slide-enter-from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="container">
+            <!-- Header -->
+            <header class="header">
+                <div class="title-container">
+                    <svg class="graduation-icon" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z"/>
+                    </svg>
+                    <h1>Student Dashboard</h1>
+                </div>
+                
+                <button class="add-button" @click="showAddForm = true">
+                    Add Student
+                </button>
+            </header>
+
+            <main>
+                <!-- Add Student Form Modal -->
+                <div v-if="showAddForm" class="modal-overlay" @click.self="showAddForm = false">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h2 class="modal-title">Add New Student</h2>
+                            
+                                <svg class="cross-icon" width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                </svg>
+                            </button>
+                        </div>
+
+                        <form @submit.prevent="addStudent">
+                            <div class="form-group">
+                                <label for="name">Student Name *</label>
+                                <input 
+                                    id="name"
+                                    type="text" 
+                                    v-model="newStudent.name"
+                                    :class="{ error: errors.name }"
+                                    @input="validateField('name')"
+                                    @blur="validateField('name')"
+                                    aria-describedby="name-error"
+                                >
+                                <div v-if="errors.name" id="name-error" class="error-message">
+                                    {{ errors.name }}
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="age">Age *</label>
+                                <input 
+                                    id="age"
+                                    type="number" 
+                                    v-model="newStudent.age"
+                                    :class="{ error: errors.age }"
+                                    @input="validateField('age')"
+                                    @blur="validateField('age')"
+                                    aria-describedby="age-error"
+                                >
+                                <div v-if="errors.age" id="age-error" class="error-message">
+                                    {{ errors.age }}
+                                </div>
+                            </div>
+
+                            <div class="form-buttons">
+                                <button type="button" class="btn btn-cancel" @click="showAddForm = false">
+                                    Cancel
+                                </button>
+                                <button type="submit" class="btn btn-submit" :disabled="!isFormValid">
+                                    Add Student
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Student List -->
+                <div class="student-list">
+                    <div v-if="students.length === 0" class="empty-state">
+                        <svg class="empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9 5m-9-5v10"/>
+                        </svg>
+                        <p>No students found. Add your first student!</p>
+                    </div>
+
+                    <transition-group name="slide">
+                        <div v-for="student in students" :key="student.id" class="student-card">
+                            <div class="student-info">
+                                <div class="student-name">{{ student.name }}</div>
+                                <div class="student-age">Age: {{ student.age }}</div>
+                            </div>
+                            <button 
+                                class="delete-button" 
+                                @click="deleteStudent(student.id)"
+                                aria-label="Delete student"
+                            >
+                                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </transition-group>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        const { createApp, ref, reactive, computed, watch } = Vue;
+        
+        createApp({
+            setup() {
+                const students = ref([
+                    { id: 1, name: 'Alice Johnson', age: 21 },
+                    { id: 2, name: 'Michael Smith', age: 22 },
+                    { id: 3, name: 'alex', age: 20 }
+                ]);
+                
+                const showAddForm = ref(false);
+                const newStudent = reactive({
+                    name: '',
+                    age: ''
+                });
+                
+                const errors = reactive({
+                    name: '',
+                    age: ''
+                });
+                
+                const isFormValid = computed(() => {
+                    return newStudent.name.trim().length >= 2 && 
+                           newStudent.age && 
+                           /^\d+$/.test(newStudent.age) && 
+                           parseInt(newStudent.age) >= 1 && 
+                           parseInt(newStudent.age) <= 120 &&
+                           !errors.name && 
+                           !errors.age;
+                });
+                
+                const validateField = (field) => {
+                    switch (field) {
+                        case 'name':
+                            if (!newStudent.name.trim()) {
+                                errors.name = 'Name is required';
+                            } else if (newStudent.name.trim().length < 2) {
+                                errors.name = 'Name must be at least 2 characters';
+                            } else {
+                                errors.name = '';
+                            }
+                            break;
+                        
+                        case 'age':
+                            if (!newStudent.age) {
+                                errors.age = 'Age is required';
+                            } else if (!/^\d+$/.test(newStudent.age)) {
+                                errors.age = 'Age must be a number';
+                            } else if (parseInt(newStudent.age) < 1 || parseInt(newStudent.age) > 120) {
+                                errors.age = 'Age must be between 1 and 120';
+                            } else {
+                                errors.age = '';
+                            }
+                            break;
+                    }
+                };
+                
+                const addStudent = () => {
+                    validateField('name');
+                    validateField('age');
+                    
+                    if (isFormValid.value) {
+                        students.value.unshift({
+                            id: Date.now(),
+                            name: newStudent.name.trim(),
+                            age: parseInt(newStudent.age)
+                        });
+                        
+                        newStudent.name = '';
+                        newStudent.age = '';
+                        errors.name = '';
+                        errors.age = '';
+                        showAddForm.value = false;
+                    }
+                };
+                
+                const deleteStudent = (studentId) => {
+                    if (confirm('Are you sure you want to delete this student?')) {
+                        students.value = students.value.filter(student => student.id !== studentId);
+                    }
+                };
+                
+                // Close modal on Escape key
+                watch(showAddForm, (newVal) => {
+                    if (newVal) {
+                        const handleEscape = (event) => {
+                            if (event.key === 'Escape') {
+                                showAddForm.value = false;
+                            }
+                        };
+                        document.addEventListener('keydown', handleEscape);
+                        
+                        return () => {
+                            document.removeEventListener('keydown', handleEscape);
+                        };
+                    }
+                });
+                
+                return {
+                    students,
+                    showAddForm,
+                    newStudent,
+                    errors,
+                    isFormValid,
+                    validateField,
+                    addStudent,
+                    deleteStudent
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
